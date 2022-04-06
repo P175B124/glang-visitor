@@ -10,12 +10,30 @@ public class PrintConstantTest {
     @Test
     void print_integer_constant() {
         String program = """
-                print(5)
+                print(5)                
                 """;
 
         String expected =
                 """
                 5
+                """;
+
+        String actual = (String)GLang.execute(CharStreams.fromString(program));
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void print_multiple_integers_constant() {
+        String program = """
+                print(5)
+                print(13)             
+                """;
+
+        String expected =
+                """
+                5
+                13
                 """;
 
         String actual = (String)GLang.execute(CharStreams.fromString(program));
