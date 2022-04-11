@@ -2,10 +2,15 @@ package org.glang.visitor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
 
-    private final Map<String, Object> symbols = new HashMap<>();
+    private final Map<String, Object> globalSymbols = new HashMap<>();
+
+    private final Stack<Map<String, Object>> blockSymbolStack = new Stack<>();
+
+    private Map<String, Object> currentBlockSymbol = null;
 
     @Override
     public Object visitProgram(GLangParser.ProgramContext ctx) {
@@ -40,14 +45,27 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
     public Object visitAssignment(GLangParser.AssignmentContext ctx) {
         String varName = ctx.IDENTIFIER().getText();
         Object value = visit(ctx.expression());
-        this.symbols.put(varName, value);
+        if (currentBlockSymbol == null) {
+            this.globalSymbols.put(varName, value);
+        } else {
+            if (this.globalSymbols.containsKey(varName)) {
+                this.globalSymbols.put(varName, value);
+            } else {
+                this.currentBlockSymbol.put(varName, value);
+            }
+        }
         return null;
     }
 
     @Override
     public Object visitIdentifierExpression(GLangParser.IdentifierExpressionContext ctx) {
         //TODO validate (maybe not defined)
-        return this.symbols.get(ctx.IDENTIFIER().getText());
+        String varName = ctx.IDENTIFIER().getText();
+        if (this.globalSymbols.containsKey(varName)) {
+            return this.globalSymbols.get(varName);
+        } else {
+            return this.currentBlockSymbol.get(varName);
+        }
     }
 
     @Override
@@ -88,7 +106,17 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
 
     @Override
     public Object visitBlock(GLangParser.BlockContext ctx) {
-        return super.visitBlock(ctx);
+        if (currentBlockSymbol != null) {
+            blockSymbolStack.push(currentBlockSymbol);
+        }
+        currentBlockSymbol = new HashMap<>();
+        super.visitBlock(ctx);
+        if (blockSymbolStack.empty()) {
+            currentBlockSymbol = null;
+        } else {
+            currentBlockSymbol = blockSymbolStack.pop();
+        }
+        return null;
     }
 
     @Override
