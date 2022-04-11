@@ -7,6 +7,7 @@ program
 statement
  : assignment
  | systemFunctionCall
+ | ifElseStatement
  ;
 
 assignment
@@ -17,28 +18,32 @@ systemFunctionCall
  : PRINT '(' expression ')'                             #printFunctionCall
  ;
 
+ifElseStatement : 'if' '(' expression ')' block 'else' block ;
+
+block : '{' statement* '}' ;
+
 constant: INTEGER | DECIMAL | BOOLEAN |STRING ;
 
 expression
  : constant                                             #constantExpression
  | IDENTIFIER                                           #identifierExpression
-// | '(' expression ')'                                   #parenthesesExpression
-// | booleanUnaryOp expression                            #booleanUnaryOpExpression
-// | expression booleanBinaryOp expression                #booleanBinaryOpExpression
-// | expression numericMultiOp expression                 #numericMultiOpExpression
-// | expression numericAddOp expression                   #numericAddOpExpression
-// | expression stringBinaryOp expression                 #stringBinaryOpExpression
+ | '(' expression ')'                                   #parenthesesExpression
+ | booleanUnaryOp expression                            #booleanUnaryOpExpression
+ | expression booleanBinaryOp expression                #booleanBinaryOpExpression
+ | expression numericMultiOp expression                 #numericMultiOpExpression
+ | expression numericAddOp expression                   #numericAddOpExpression
+ | expression stringBinaryOp expression                 #stringBinaryOpExpression
  ;
-//
-//booleanUnaryOp : '!' ;
-//
-//booleanBinaryOp : '||' | '&&' ;
-//
-//numericMultiOp : '*' | '/' | '%' ;
-//
-//numericAddOp : '+' | '-' ;
-//
-//stringBinaryOp : '..' ; //concat
+
+booleanUnaryOp : '!' ;
+
+booleanBinaryOp : '||' | '&&' ;
+
+numericMultiOp : '*' | '/' | '%' ;
+
+numericAddOp : '+' | '-' ;
+
+stringBinaryOp : '..' ; //concat
 
 PRINT : 'print';
 
