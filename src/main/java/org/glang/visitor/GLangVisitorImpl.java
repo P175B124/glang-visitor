@@ -1,27 +1,27 @@
 package org.glang.visitor;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
 
-    private final Map<String, Object> globalSymbols = new HashMap<>();
+    private final StringBuilder SYSTEM_OUT = new StringBuilder();
 
-    private final Stack<Map<String, Object>> blockSymbolStack = new Stack<>();
+    private final Stack<GLangScope> scopeStack = new Stack<>();
 
-    private Map<String, Object> currentBlockSymbol = null;
+    private GLangScope currentScope = new GLangScope();
 
     @Override
     public Object visitProgram(GLangParser.ProgramContext ctx) {
-        return super.visitProgram(ctx).toString();
+        super.visitProgram(ctx);
+        return SYSTEM_OUT.toString();
     }
 
     @Override
     public Object visitPrintFunctionCall(GLangParser.PrintFunctionCallContext ctx) {
         String text = visit(ctx.expression()).toString();
         System.out.println(text);
-        return text + "\n";
+        SYSTEM_OUT.append(text).append("\n");
+        return null;
     }
 
     @Override
@@ -42,30 +42,25 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
     }
 
     @Override
+    public Object visitVariableDeclaration(GLangParser.VariableDeclarationContext ctx) {
+        String varName = ctx.IDENTIFIER().getText();
+        Object value = visit(ctx.expression());
+        this.currentScope.declareVariable(varName, value);
+        return null;
+    }
+
+    @Override
     public Object visitAssignment(GLangParser.AssignmentContext ctx) {
         String varName = ctx.IDENTIFIER().getText();
         Object value = visit(ctx.expression());
-        if (currentBlockSymbol == null) {
-            this.globalSymbols.put(varName, value);
-        } else {
-            if (this.globalSymbols.containsKey(varName)) {
-                this.globalSymbols.put(varName, value);
-            } else {
-                this.currentBlockSymbol.put(varName, value);
-            }
-        }
+        this.currentScope.changeVariable(varName, value);
         return null;
     }
 
     @Override
     public Object visitIdentifierExpression(GLangParser.IdentifierExpressionContext ctx) {
-        //TODO validate (maybe not defined)
         String varName = ctx.IDENTIFIER().getText();
-        if (this.globalSymbols.containsKey(varName)) {
-            return this.globalSymbols.get(varName);
-        } else {
-            return this.currentBlockSymbol.get(varName);
-        }
+        return this.currentScope.resolveVariable(varName);
     }
 
     @Override
@@ -106,34 +101,15 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
 
     @Override
     public Object visitBlock(GLangParser.BlockContext ctx) {
-        if (currentBlockSymbol != null) {
-            blockSymbolStack.push(currentBlockSymbol);
-        }
-        currentBlockSymbol = new HashMap<>();
+        scopeStack.push(currentScope);
+        currentScope = new GLangScope(currentScope);
         super.visitBlock(ctx);
-        if (blockSymbolStack.empty()) {
-            currentBlockSymbol = null;
-        } else {
-            currentBlockSymbol = blockSymbolStack.pop();
-        }
+        currentScope = scopeStack.pop();
         return null;
     }
 
     @Override
     public Object visitParenthesesExpression(GLangParser.ParenthesesExpressionContext ctx) {
         return visit(ctx.expression());
-    }
-
-    @Override
-    protected Object defaultResult() {
-        return new StringBuilder();
-    }
-
-    @Override
-    protected Object aggregateResult(Object aggregate, Object nextResult) {
-        if (nextResult != null) {
-            ((StringBuilder) aggregate).append(nextResult);
-        }
-        return aggregate;
     }
 }

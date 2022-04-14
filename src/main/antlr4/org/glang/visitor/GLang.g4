@@ -5,9 +5,14 @@ program
  ;
 
 statement
- : assignment
+ : variableDeclaration
+ | assignment
  | systemFunctionCall
  | ifElseStatement
+ ;
+
+variableDeclaration
+ : 'var' IDENTIFIER '=' expression
  ;
 
 assignment
