@@ -1,15 +1,29 @@
 grammar GLang;
 
 program
- : statement+ EOF
+ : line+ EOF
+ ;
+
+line
+ : functionDeclaration
+ | statement
  ;
 
 statement
  : variableDeclaration
  | assignment
+ | functionCall
  | systemFunctionCall
  | ifElseStatement
  ;
+
+functionDeclaration
+ : 'func' IDENTIFIER '(' paramList? ')' functionBody
+ ;
+
+paramList : IDENTIFIER (',' IDENTIFIER)* ;
+
+functionBody : '{' statement* 'return' expression '}' ; //TODO cannot return from the midle of function
 
 variableDeclaration
  : 'var' IDENTIFIER '=' expression
@@ -17,6 +31,10 @@ variableDeclaration
 
 assignment
  : IDENTIFIER '=' expression
+ ;
+
+functionCall
+ : IDENTIFIER '(' expressionList? ')'
  ;
 
 systemFunctionCall
@@ -29,6 +47,10 @@ block : '{' statement* '}' ;
 
 constant: INTEGER | DECIMAL | BOOLEAN |STRING ;
 
+expressionList
+ : expression (',' expression)*
+ ;
+
 expression
  : constant                                             #constantExpression
  | IDENTIFIER                                           #identifierExpression
@@ -38,6 +60,7 @@ expression
  | expression numericMultiOp expression                 #numericMultiOpExpression
  | expression numericAddOp expression                   #numericAddOpExpression
  | expression stringBinaryOp expression                 #stringBinaryOpExpression
+ | functionCall                                         #functionCallExpression
  ;
 
 booleanUnaryOp : '!' ;
