@@ -2,7 +2,7 @@ package org.glang.visitor;
 
 import org.antlr.v4.runtime.tree.RuleNode;
 
-import java.util.Stack;
+import java.util.*;
 
 public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
 
@@ -11,6 +11,8 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
     private final Stack<GLangScope> scopeStack = new Stack<>();
 
     private GLangScope currentScope = new GLangScope();
+
+    private final Map<String, GLangParser.FunctionDeclarationContext> functions = new HashMap<>();
 
     @Override
     public Object visitProgram(GLangParser.ProgramContext ctx) {
@@ -128,4 +130,58 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
         return !(currentResult instanceof ReturnValue);
     }
 
+    @Override
+    public Object visitFunctionDeclaration(GLangParser.FunctionDeclarationContext ctx) {
+        String functionName = ctx.IDENTIFIER().getText();
+
+        //TODO create Function class that has constructor(FunctionDeclarationContext), invoke method
+        //TODO validate if does not exist
+        //TODO probably something else
+        this.functions.put(functionName, ctx);
+        return null;
+    }
+
+    @Override
+    public Object visitFunctionCall(GLangParser.FunctionCallContext ctx) {
+
+        String functionName = ctx.IDENTIFIER().getText();
+        //TODO validate if exists
+        GLangParser.FunctionDeclarationContext function = this.functions.get(functionName);
+
+        //TODO validate args count
+
+        List<Object> arguments = new ArrayList<>();
+        if (ctx.expressionList() != null) {
+            for (var expr : ctx.expressionList().expression()) {
+                arguments.add(this.visit(expr));
+            }
+        }
+
+        //TODO validate args types
+
+        GLangScope functionScope = new GLangScope();
+
+        if (function.paramList() != null) {
+            for (int i = 0; i < function.paramList().IDENTIFIER().size(); i++) {
+                String paramName = function.paramList().IDENTIFIER(i).getText();
+                functionScope.declareVariable(paramName, arguments.get(i));
+            }
+        }
+
+        scopeStack.push(currentScope);
+        currentScope = functionScope;
+        ReturnValue value = (ReturnValue) this.visitFunctionBody(function.functionBody());
+        currentScope = scopeStack.pop();
+
+        return value.getValue();
+    }
+
+    @Override
+    public Object visitFunctionBody(GLangParser.FunctionBodyContext ctx) {
+        Object value = super.visitFunctionBody(ctx);
+        if (value instanceof ReturnValue) {
+            return value;
+        }
+        return new ReturnValue(null);
+    }
 }

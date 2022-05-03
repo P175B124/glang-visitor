@@ -1,2 +1,4 @@
-a=5
-print(b)
+func sum(a,b) {
+    return a+b
+}
+print(sum(1, sum(2, sum(3,4))))
