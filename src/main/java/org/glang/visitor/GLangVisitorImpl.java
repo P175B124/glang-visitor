@@ -1,5 +1,7 @@
 package org.glang.visitor;
 
+import org.antlr.v4.runtime.tree.RuleNode;
+
 import java.util.Stack;
 
 public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
@@ -92,24 +94,38 @@ public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
     public Object visitIfElseStatement(GLangParser.IfElseStatementContext ctx) {
         boolean value = (Boolean) visit(ctx.expression());
         if (value) {
-            visit(ctx.block(0));
+            return visit(ctx.block(0));
         } else {
-            visit(ctx.block(1));
+            return visit(ctx.block(1));
         }
-        return null;
     }
 
     @Override
     public Object visitBlock(GLangParser.BlockContext ctx) {
         scopeStack.push(currentScope);
         currentScope = new GLangScope(currentScope);
-        super.visitBlock(ctx);
+        Object value = super.visitBlock(ctx);
         currentScope = scopeStack.pop();
-        return null;
+        return value;
     }
 
     @Override
     public Object visitParenthesesExpression(GLangParser.ParenthesesExpressionContext ctx) {
         return visit(ctx.expression());
     }
+
+    @Override
+    public Object visitReturnStatement(GLangParser.ReturnStatementContext ctx) {
+        if (ctx.expression() == null) {
+            return new ReturnValue(null);
+        } else {
+            return new ReturnValue(this.visit(ctx.expression()));
+        }
+    }
+
+    @Override
+    protected boolean shouldVisitNextChild(RuleNode node, Object currentResult) {
+        return !(currentResult instanceof ReturnValue);
+    }
+
 }

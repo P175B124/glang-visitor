@@ -15,6 +15,7 @@ statement
  | functionCall
  | systemFunctionCall
  | ifElseStatement
+ | returnStatement
  ;
 
 functionDeclaration
@@ -23,7 +24,7 @@ functionDeclaration
 
 paramList : IDENTIFIER (',' IDENTIFIER)* ;
 
-functionBody : '{' statement* 'return' expression '}' ; //TODO cannot return from the midle of function
+functionBody : '{' statement* '}' ; //TODO cannot return from the midle of function
 
 variableDeclaration
  : 'var' IDENTIFIER '=' expression
@@ -44,6 +45,8 @@ systemFunctionCall
 ifElseStatement : 'if' '(' expression ')' block 'else' block ;
 
 block : '{' statement* '}' ;
+
+returnStatement : 'return' expression? ;
 
 constant: INTEGER | DECIMAL | BOOLEAN |STRING ;
 
