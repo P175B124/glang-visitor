@@ -4,6 +4,11 @@ import org.antlr.v4.runtime.tree.RuleNode;
 
 import java.util.*;
 
+//TODO - ValueType enum
+//TODO class Value (wraps value+type), return type accepts Value
+//TODO VOID return type
+//TODO Function class, with validation and invoke methods
+//TODO small visitor classes
 public class GLangVisitorImpl extends GLangBaseVisitor<Object> {
 
     private final StringBuilder SYSTEM_OUT = new StringBuilder();
